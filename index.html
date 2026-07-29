@@ -259,10 +259,14 @@ mark{background:rgba(245,158,11,.35);border-radius:2px;color:inherit}
     <div class="si"    id="sv-wh"       onclick="setSBV('wh')">       <span class="si-l">&#x1F3ED; Warehouses</span>         <span class="sib" id="sb-wh">0</span></div>
     <div class="si"    id="sv-wf"       onclick="setSBV('wf')">       <span class="si-l">&#x2699; Workflows</span>           <span class="sib" id="sb-wf">0</span></div>
     <div class="ss" style="margin-top:8px">Status</div>
-    <div class="si" id="sv-Active"        onclick="setSBS('Active')">         <span class="si-l"><span class="dot dg"></span>Active</span>        <span class="sib" id="sb-act">0</span></div>
-    <div class="si" id="sv-NotActivated"  onclick="setSBS('Not Activated')">  <span class="si-l"><span class="dot dy"></span>Not Activated</span> <span class="sib" id="sb-na">0</span></div>
-    <div class="si" id="sv-Pending"       onclick="setSBS('Pending')">        <span class="si-l"><span class="dot dpu"></span>Pending</span>       <span class="sib" id="sb-pe">0</span></div>
-    <div class="si" id="sv-Suspended"     onclick="setSBS('Suspended')">      <span class="si-l"><span class="dot dr"></span>Suspended</span>     <span class="sib" id="sb-su">0</span></div>
+    <div class="si" id="sv-Active"      onclick="setSBS('Active')">      <span class="si-l"><span class="dot dg"></span>Active</span>      <span class="sib" id="sb-act">0</span></div>
+    <div class="si" id="sv-Suspended"   onclick="setSBS('Suspended')">   <span class="si-l"><span class="dot dr"></span>Suspended</span>   <span class="sib" id="sb-su">0</span></div>
+    <div class="si" id="sv-Terminated"  onclick="setSBS('Terminated')">  <span class="si-l"><span class="dot dy"></span>Terminated</span>  <span class="sib" id="sb-te">0</span></div>
+    <div class="si" id="sv-Blocked"     onclick="setSBS('Blocked')">     <span class="si-l"><span class="dot do"></span>Blocked</span>     <span class="sib" id="sb-bl">0</span></div>
+    <div class="si" id="sv-Onboarded"   onclick="setSBS('Onboarded')">   <span class="si-l"><span class="dot dc"></span>Onboarded</span>   <span class="sib" id="sb-on">0</span></div>
+    <div class="si" id="sv-Inactive"    onclick="setSBS('Inactive')">    <span class="si-l"><span class="dot dpu"></span>Inactive</span>    <span class="sib" id="sb-in">0</span></div>
+    <div class="si" id="sv-Rejected"    onclick="setSBS('Rejected')">    <span class="si-l"><span class="dot da"></span>Rejected</span>    <span class="sib" id="sb-re">0</span></div>
+    <div class="si" id="sv-Suspended"   onclick="setSBS('Suspended')">      <span class="si-l"><span class="dot dr"></span>Suspended</span>     <span class="sib" id="sb-su">0</span></div>
 
   </div>
 
@@ -272,7 +276,7 @@ mark{background:rgba(245,158,11,.35);border-radius:2px;color:inherit}
       <div class="fb">
         <div style="display:flex;align-items:center;gap:5px"><span class="fl">Status:</span>
           <select class="fs" id="fSt" onchange="applyF()">
-            <option value="">All</option><option>Active</option><option>Not Activated</option><option>Pending</option><option>Suspended</option>
+            <option value="">All</option><option>Active</option><option>Suspended</option><option>Terminated</option><option>Blocked</option><option>Onboarded</option><option>Inactive</option><option>Rejected</option>
           </select></div>
         <div style="display:flex;align-items:center;gap:5px"><span class="fl">Role:</span>
           <select class="fs" id="fRo" onchange="applyF()" style="min-width:170px"></select></div>
@@ -282,7 +286,7 @@ mark{background:rgba(245,158,11,.35);border-radius:2px;color:inherit}
           <select class="fs" id="fWH" onchange="applyF()" style="min-width:170px"></select></div>
         <div style="display:flex;align-items:center;gap:5px"><span class="fl">Type:</span>
           <select class="fs" id="fTy" onchange="applyF()">
-            <option value="">All</option><option value="1">Internal</option><option value="2">External</option>
+            <option value="">All</option><option value="Internal">Internal</option><option value="External">External</option>
           </select></div>
         <span class="fc" id="fCnt"></span>
         <button class="fcl" onclick="clearF()">&#x2715; Clear</button>
@@ -560,7 +564,7 @@ function buildF(){
 
 function updStats(){
   var act=U.filter(u=>u.status==='Active').length,na=U.filter(u=>u.status==='Not Activated').length;
-  var int_=U.filter(u=>u.type===1).length,ext=U.filter(u=>u.type===2).length;
+  var int_=U.filter(u=>u.type==='Internal').length,ext=U.filter(u=>u.type==='External').length;
   var wh=U.filter(u=>u.whId).length,rl=new Set(U.map(u=>u.role).filter(r=>r&&r!=='Not Assigened')).size;
   document.getElementById('sbar').innerHTML=
     sv(U.length,'Total Users','var(--text)')+div()+
@@ -575,14 +579,17 @@ function div(){return '<div class="sdiv"></div>';}
 
 function updSB(){
   document.getElementById('sb-all').textContent=U.length.toLocaleString();
-  document.getElementById('sb-int').textContent=U.filter(u=>u.type===1).length.toLocaleString();
-  document.getElementById('sb-ext').textContent=U.filter(u=>u.type===2).length.toLocaleString();
+  document.getElementById('sb-int').textContent=U.filter(u=>u.type==='Internal').length.toLocaleString();
+  document.getElementById('sb-ext').textContent=U.filter(u=>u.type==='External').length.toLocaleString();
   document.getElementById('sb-wh').textContent=Object.keys(WH).length;
   document.getElementById('sb-wf').textContent=WF.length;
   document.getElementById('sb-act').textContent=U.filter(u=>u.status==='Active').length.toLocaleString();
-  document.getElementById('sb-na').textContent=U.filter(u=>u.status==='Not Activated').length.toLocaleString();
-  document.getElementById('sb-pe').textContent=U.filter(u=>u.status==='Pending').length.toLocaleString();
   document.getElementById('sb-su').textContent=U.filter(u=>u.status==='Suspended').length.toLocaleString();
+  document.getElementById('sb-te').textContent=U.filter(u=>u.status==='Terminated').length.toLocaleString();
+  document.getElementById('sb-bl').textContent=U.filter(u=>u.status==='Blocked').length.toLocaleString();
+  document.getElementById('sb-on').textContent=U.filter(u=>u.status==='Onboarded').length.toLocaleString();
+  document.getElementById('sb-in').textContent=U.filter(u=>u.status==='Inactive').length.toLocaleString();
+  document.getElementById('sb-re').textContent=U.filter(u=>u.status==='Rejected').length.toLocaleString();
 
 }
 
@@ -592,11 +599,11 @@ function setSBV(v){
   if(v==='wh'){showV('wh');return;}
   if(v==='wf'){showV('wf');renderWFGrid();return;}
   showV('tb');
-  document.getElementById('fTy').value=v==='internal'?'1':v==='external'?'2':'';
+  document.getElementById('fTy').value=v==='internal'?'Internal':v==='external'?'External':'';
   applyF();
 }
 function setSBS(s){
-  sbOff();document.getElementById('sv-'+(s==='Not Activated'?'NotActivated':s)).classList.add('on');
+  sbOff();document.getElementById('sv-'+s).classList.add('on');
   showV('tb');document.getElementById('fSt').value=s;applyF();
 }
 function setSBW(m){
@@ -670,8 +677,8 @@ function renderT(){
   var q=document.getElementById('gs').value.toLowerCase().trim();
   var tbody=document.getElementById('tbody');
   if(!page.length){tbody.innerHTML='<tr class="emp"><td colspan="8">No users match the current filters.</td></tr>';renderPG();return;}
-  var scls={'Active':'sa','Not Activated':'sn','Pending':'spe','Suspended':'ssu'};
-  var dcls={'Active':'dg','Not Activated':'dy','Pending':'dp','Suspended':'dr'};
+  var scls={'Active':'sa','Suspended':'ssu','Terminated':'ste','Blocked':'sbl','Onboarded':'son','Inactive':'sin','Rejected':'sre','Unknown':'sn'};
+  var dcls={'Active':'dg','Suspended':'dr','Terminated':'dy','Blocked':'do','Onboarded':'dc','Inactive':'dpu','Rejected':'da','Unknown':'dpu'};
   tbody.innerHTML=page.map(function(u){
     var sc=scls[u.status]||'',dc=dcls[u.status]||'',s=u.id===selId?'sel':'';
     var h=q?function(t){return hl(t,q);}:e;
@@ -684,7 +691,7 @@ function renderT(){
       +'<td>'+whcell+'</td>'
       +'<td>'+h(u.category)+'</td>'
       +'<td><span class="sp '+sc+'"><span class="dot '+dc+'"></span>'+e(u.status)+'</span></td>'
-      +'<td><span class="tp '+(u.type===1?'ti':'te')+'">'+(u.type===1?'Internal':'External')+'</span></td>'
+      +'<td><span class="tp '+(u.type==='Internal'?'ti':'te')+'">'+(u.type==='Internal'?'Internal':'External')+'</span></td>'
       +'</tr>';
   }).join('');
   renderPG();
@@ -828,7 +835,7 @@ function rInfo(u){
     +'<div class="ic igf"><div class="ick">Full Name</div><div class="icv">'+e(u.name)+'</div></div>'
     +'<div class="ic igf"><div class="ick">Email</div><div class="icv">'+(u.email?'<a href="mailto:'+e(u.email)+'" style="color:var(--accent)">'+e(u.email)+'</a>':'<span style="color:var(--muted)">&mdash;</span>')+'</div></div>'
     +'<div class="ic"><div class="ick">Mobile</div><div class="icv">'+(u.mobile||'<span style="color:var(--muted)">&mdash;</span>')+'</div></div>'
-    +'<div class="ic"><div class="ick">Type</div><div class="icv"><span class="tp '+(u.type===1?'ti':'te')+'">'+(u.type===1?'Internal':'External')+'</span></div></div>'
+    +'<div class="ic"><div class="ick">Type</div><div class="icv"><span class="tp '+(u.type==='Internal'?'ti':'te')+'">'+(u.type==='Internal'?'Internal':'External')+'</span></div></div>'
     +'<div class="ic"><div class="ick">Category</div><div class="icv">'+e(u.category||'—')+'</div></div>'
     +'<div class="ic"><div class="ick">Designation ID</div><div class="icv" style="font-family:monospace;font-size:11px;color:var(--muted)">'+e(u.desig||'—')+'</div></div>'
     +'<div class="ic igf"><div class="ick">Role</div><div class="icv"><span class="rp" style="max-width:100%;font-size:12px;padding:3px 8px">'+e(u.role)+'</span></div></div>'
