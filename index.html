@@ -382,6 +382,8 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 let D={users:[],rolePerms:{},kcPerms:{},workflows:[],warehouses:{}};
 let U=[],RP={},KC={},WF=[],WH={},WHC={};
 let fil=[],pg=1,pgsz=50,scol='',sdir=1,ctab='info',selId=null;
+var scls={'Active':'sa','Suspended':'ssu','Terminated':'ste','Blocked':'sbl','Onboarded':'son','Inactive':'sin','Rejected':'sre','Unknown':'sn'};
+var dcls={'Active':'dg','Suspended':'dr','Terminated':'dy','Blocked':'do','Onboarded':'dc','Inactive':'dpu','Rejected':'da','Unknown':'dpu'};
 
 // ── Debug logger ──────────────────────────────────────────────────────────────
 function dbg(msg,type){
@@ -676,8 +678,7 @@ function renderT(){
   var q=document.getElementById('gs').value.toLowerCase().trim();
   var tbody=document.getElementById('tbody');
   if(!page.length){tbody.innerHTML='<tr class="emp"><td colspan="8">No users match the current filters.</td></tr>';renderPG();return;}
-  var scls={'Active':'sa','Suspended':'ssu','Terminated':'ste','Blocked':'sbl','Onboarded':'son','Inactive':'sin','Rejected':'sre','Unknown':'sn'};
-  var dcls={'Active':'dg','Suspended':'dr','Terminated':'dy','Blocked':'do','Onboarded':'dc','Inactive':'dpu','Rejected':'da','Unknown':'dpu'};
+
   tbody.innerHTML=page.map(function(u){
     var sc=scls[u.status]||'',dc=dcls[u.status]||'',s=u.id===selId?'sel':'';
     var h=q?function(t){return hl(t,q);}:e;
