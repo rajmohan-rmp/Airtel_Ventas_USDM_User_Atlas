@@ -266,7 +266,6 @@ mark{background:rgba(245,158,11,.35);border-radius:2px;color:inherit}
     <div class="si" id="sv-Onboarded"   onclick="setSBS('Onboarded')">   <span class="si-l"><span class="dot dc"></span>Onboarded</span>   <span class="sib" id="sb-on">0</span></div>
     <div class="si" id="sv-Inactive"    onclick="setSBS('Inactive')">    <span class="si-l"><span class="dot dpu"></span>Inactive</span>    <span class="sib" id="sb-in">0</span></div>
     <div class="si" id="sv-Rejected"    onclick="setSBS('Rejected')">    <span class="si-l"><span class="dot da"></span>Rejected</span>    <span class="sib" id="sb-re">0</span></div>
-    <div class="si" id="sv-Suspended"   onclick="setSBS('Suspended')">      <span class="si-l"><span class="dot dr"></span>Suspended</span>     <span class="sib" id="sb-su">0</span></div>
 
   </div>
 
@@ -563,13 +562,13 @@ function buildF(){
 }
 
 function updStats(){
-  var act=U.filter(u=>u.status==='Active').length,na=U.filter(u=>u.status==='Not Activated').length;
+  var act=U.filter(u=>u.status==='Active').length,sus=U.filter(u=>u.status==='Suspended').length;
   var int_=U.filter(u=>u.type==='Internal').length,ext=U.filter(u=>u.type==='External').length;
   var wh=U.filter(u=>u.whId).length,rl=new Set(U.map(u=>u.role).filter(r=>r&&r!=='Not Assigened')).size;
   document.getElementById('sbar').innerHTML=
     sv(U.length,'Total Users','var(--text)')+div()+
     sv(int_,'Internal','var(--cyan)')+sv(ext,'External','var(--orange)')+div()+
-    sv(act,'Active','var(--green)')+sv(na,'Not Activated','var(--yellow)')+div()+
+    sv(act,'Active','var(--green)')+sv(sus,'Suspended','var(--red)')+div()+
     sv(Object.keys(WH).length,'Warehouses','var(--orange)')+sv(wh,'Mapped to WH','var(--accent)')+div()+
     sv(rl,'Roles','var(--accent)')+sv(WF.length,'Workflows','var(--purple)')+div()+
     '<div class="sv"><div class="sv-n" id="statSh" style="color:var(--text)">'+pgsz+'</div><div class="sv-l">Showing</div></div>';
@@ -823,8 +822,8 @@ function sTab(t){
 }
 
 function rInfo(u){
-  var sc={Active:'sa','Not Activated':'sn',Pending:'spe',Suspended:'ssu'}[u.status]||'';
-  var dc={Active:'dg','Not Activated':'dy',Pending:'dpu',Suspended:'dr'}[u.status]||'';
+  var sc=(scls[u.status]||'');
+  var dc=(dcls[u.status]||'dpu');
   var whSec=u.whId
     ?'<div class="sect">&#x1F3ED; Warehouse</div><div class="whc"><div class="whcn">'+e(u.whName||'—')+'</div><div class="whci">Warehouse ID: '+e(u.whId)+'</div><div class="whcu">'+(WHC[u.whId]||1)+' user(s) assigned to this warehouse</div><div class="qa" style="margin-top:7px"><button class="btn btn-g" style="font-size:11px;padding:4px 8px" onclick="fByWH(\x27'+e(u.whId)+'\x27,\x27'+e(u.whName)+'\x27);closePanel()">&#x1F465; All users in this WH</button></div></div>'
     :'<div class="sect">&#x1F3ED; Warehouse</div><div class="nod" style="padding:10px;text-align:left;font-size:12px">No warehouse assigned.</div>';
