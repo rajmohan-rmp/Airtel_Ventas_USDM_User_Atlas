@@ -553,7 +553,7 @@ function init(){
   fil=[...U]; pg=1;buildF();updStats();updSB();applyF();renderWHGrid();renderWF();}
 
 function buildF(){
-  var roles=[...new Set(U.map(u=>u.role))].sort();
+  var roles=[...new Set(U.flatMap(u=>u.role?u.role.split(' | ').map(r=>r.trim()):[]))].filter(Boolean).sort();
   document.getElementById('fRo').innerHTML='<option value="">All Roles</option>'+roles.map(r=>'<option>'+e(r)+'</option>').join('');
   var cats=[...new Set(U.map(u=>u.category).filter(Boolean))].sort();
   document.getElementById('fCa').innerHTML='<option value="">All Categories</option>'+cats.map(c=>'<option>'+e(c)+'</option>').join('');
@@ -564,7 +564,7 @@ function buildF(){
 function updStats(){
   var act=U.filter(u=>u.status==='Active').length,sus=U.filter(u=>u.status==='Suspended').length;
   var int_=U.filter(u=>u.type==='Internal').length,ext=U.filter(u=>u.type==='External').length;
-  var wh=U.filter(u=>u.whId).length,rl=new Set(U.map(u=>u.role).filter(r=>r&&r!=='Not Assigened')).size;
+  var wh=U.filter(u=>u.whId).length,rl=new Set(U.flatMap(u=>u.role?u.role.split(' | ').map(r=>r.trim()):[]).filter(r=>r&&r!=='Not Assigened')).size;
   document.getElementById('sbar').innerHTML=
     sv(U.length,'Total Users','var(--text)')+div()+
     sv(int_,'Internal','var(--cyan)')+sv(ext,'External','var(--orange)')+div()+
@@ -648,7 +648,7 @@ function applyF(){
   var ty=document.getElementById('fTy').value,q=document.getElementById('gs').value.toLowerCase().trim();
   fil=U.filter(function(u){
     if(st&&u.status!==st)return false;
-    if(ro&&u.role!==ro)return false;
+    if(ro&&!u.role.split(' | ').map(r=>r.trim()).includes(ro))return false;
     if(ca&&u.category!==ca)return false;
     if(ty&&String(u.type)!==ty)return false;
     if(wh==='__none__'&&u.whId)return false;
@@ -798,8 +798,10 @@ function openU(id){
   document.getElementById('dpav').textContent=ini;
   document.getElementById('dpnm').textContent=u.name||u.id;
   document.getElementById('dpsu').textContent=u.role;
-  var perms=RP[u.role]||[],kc=KC[u.role]||[];
-  var wfs=WF.filter(function(w){return w.responsibility===u.role||w.approvalRole===u.role;});
+  var _roles=u.role?u.role.split(' | ').map(r=>r.trim()):[];
+  var perms=[].concat(..._roles.map(r=>(RP[r]||[]).map(p=>Object.assign({_role:r},p))));
+  var kc=[].concat(..._roles.map(r=>(KC[r]||[]).map(k=>Object.assign({_role:r},k))));
+  var wfs=WF.filter(function(w){return _roles.indexOf(w.responsibility)>-1||_roles.indexOf(w.approvalRole)>-1;});
   document.getElementById('tPerms').textContent='Permissions ('+perms.length+')';
   document.getElementById('tKC').textContent='Keycloak ('+kc.length+')';
   document.getElementById('tWF').textContent='Workflows ('+wfs.length+')';
@@ -849,31 +851,44 @@ function rInfo(u){
 
 function rPerms(u,perms){
   if(!perms.length){document.getElementById('dt-perms').innerHTML='<div class="nod">No permissions defined for this role.</div>';return;}
-  var grps={};perms.forEach(function(p){var k=p.menu||p.submenu||'General';if(!grps[k])grps[k]=[];grps[k].push(p);});
+  var _roles=u.role?u.role.split(' | ').map(function(r){return r.trim();}):[];
+  var multi=_roles.length>1;
   var h='';
-  Object.entries(grps).forEach(function(entry){var g=entry[0],items=entry[1];
-    h+='<div class="sect">'+e(g)+' <span class="bdg">'+items.length+'</span></div><div class="pl">';
-    items.forEach(function(p){
-      var ac=p.action==='Read'?'par':'paa';
-      h+='<div class="pi2"><div style="display:flex;align-items:center;gap:5px"><span class="pf">'+e(p.feature)+'</span><span class="pa '+ac+'">'+e(p.action)+'</span></div>'
-        +'<div class="pm">'+[p.submenu,p.module,p.desc].filter(Boolean).map(e).join(' &middot; ')+'</div>'
-        +(p.scope?'<div class="psc">'+e(p.scope)+'</div>':'')
-        +'</div>';
+  _roles.forEach(function(role){
+    var rp=perms.filter(function(p){return p._role===role;});
+    if(!rp.length)return;
+    if(multi)h+='<div style="background:var(--accent);color:var(--bg);border-radius:4px;padding:3px 10px;margin:8px 0 4px;font-weight:600;font-size:12px">'+e(role)+'</div>';
+    var grps={};rp.forEach(function(p){var k=p.menu||p.submenu||'General';if(!grps[k])grps[k]=[];grps[k].push(p);});
+    Object.entries(grps).forEach(function(entry){
+      var g=entry[0],items=entry[1];
+      h+='<div class="sect">'+e(g)+' <span class="bdg">'+items.length+'</span></div><div class="pl">';
+      items.forEach(function(p){
+        var ac=p.action==='Read'?'par':'paa';
+        h+='<div class="pi2"><div style="display:flex;align-items:center;gap:5px"><span class="pf">'+e(p.feature)+'</span><span class="pa '+ac+'">'+e(p.action)+'</span></div>'
+          +'<div class="pm">'+[p.submenu,p.module,p.desc].filter(Boolean).map(e).join(' &middot; ')+'</div>'
+          +(p.scope?'<div class="psc">'+e(p.scope)+'</div>':'')+'</div>';
+      });
+      h+='</div>';
     });
-    h+='</div>';
   });
   document.getElementById('dt-perms').innerHTML=h;
 }
-
 function rKC(u,kc){
   if(!kc.length){document.getElementById('dt-kc').innerHTML='<div class="nod">No Keycloak permissions for this role.</div>';return;}
-  var sc=kc.filter(function(k){return k.type==='scope';}),rs=kc.filter(function(k){return k.type==='resource';});
+  var _roles=u.role?u.role.split(' | ').map(function(r){return r.trim();}):[];
+  var multi=_roles.length>1;
   var h='';
-  if(sc.length){h+='<div class="sect">Scope <span class="bdg">'+sc.length+'</span></div>';sc.forEach(function(k){h+='<div class="kci">'+e(k.perm)+'</div>';});}
-  if(rs.length){h+='<div class="sect" style="margin-top:9px">Resource <span class="bdg">'+rs.length+'</span></div>';rs.forEach(function(k){h+='<div class="kci rs">'+e(k.perm)+'</div>';});}
+  _roles.forEach(function(role){
+    var rk=kc.filter(function(k){return k._role===role;});
+    if(!rk.length)return;
+    if(multi)h+='<div style="background:var(--accent);color:var(--bg);border-radius:4px;padding:3px 10px;margin:8px 0 4px;font-weight:600;font-size:12px">'+e(role)+'</div>';
+    var sc=rk.filter(function(k){return k.type==='scope';}),rs=rk.filter(function(k){return k.type==='resource';});
+    if(sc.length){h+='<div class="sect">Scope <span class="bdg">'+sc.length+'</span></div>';sc.forEach(function(k){h+='<div class="kci">'+e(k.perm)+'</div>';});}
+    if(rs.length){h+='<div class="sect" style="margin-top:9px">Resource <span class="bdg">'+rs.length+'</span></div>';rs.forEach(function(k){h+='<div class="kci rs">'+e(k.perm)+'</div>';});}
+    if(!sc.length&&!rs.length){rk.forEach(function(k){h+='<div class="kci">'+e(k.perm)+'</div>';});}
+  });
   document.getElementById('dt-kc').innerHTML=h;
 }
-
 function rWF(u,wfs){
   if(!wfs.length){document.getElementById('dt-wf').innerHTML='<div class="nod">No workflows for this role.</div>';return;}
   document.getElementById('dt-wf').innerHTML=wfs.map(function(w){return '<div class="wfc"><div class="wfe">'+e(w.event)+'</div><div class="wfw">'+e(w.workflow)+'</div><div class="wfg"><div><span class="wfk">Basis: </span>'+e(w.approvalBasis)+'</div><div><span class="wfk">Approver: </span>'+e(w.approvalRole)+'</div><div style="grid-column:1/-1"><span class="wfk">Responsibility: </span>'+e(w.responsibility)+'</div></div></div>';}).join('');
